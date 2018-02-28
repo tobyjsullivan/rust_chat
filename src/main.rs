@@ -2,10 +2,11 @@ extern crate rumqtt;
 
 use rumqtt::{MqttOptions, MqttClient, MqttCallback, QoS};
 use std::io;
+use std::env;
 
 fn main() {
     println!("Starting...");
-    let topic = "hello/rustclub";
+    let topic = env::var("TOPIC").expect("TOPIC not defined");
 
     let client_options = MqttOptions::new()
                                   .set_keep_alive(5)
@@ -20,7 +21,7 @@ fn main() {
     });
 
     let mut mq_client = MqttClient::start(client_options, Some(cb)).expect("Could not start client.");
-    mq_client.subscribe(vec![(topic, QoS::Level1),("hello/rust", QoS::Level1)]).expect("Failed to sub1");
+    mq_client.subscribe(vec![(&topic, QoS::Level1)]).expect("Failed to sub1");
     
     let mut username_in = String::new();
     println!("Enter a username:");
@@ -36,6 +37,6 @@ fn main() {
 
         let payload = format!("[{}]: {}", username, msg);
         println!("Okay, I want to send: {}", payload);
-        mq_client.publish(topic, QoS::Level1, payload.into_bytes()).expect("Publish failure");
+        mq_client.publish(&topic, QoS::Level1, payload.into_bytes()).expect("Publish failure");
     }
 }
